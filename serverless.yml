@@ -1,0 +1,96 @@
+service: admin-application
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  stage: ${env:STAGE}
+  region: ${env:AWS_REGION_ID}
+
+plugins:
+  - serverless-offline
+  - serverless-dotenv-plugin
+  - serverless-dynamodb-local
+  - serverless-s3-local
+
+custom:
+  s3:
+    port: 8034
+    directory: ../tmp-s3
+    website: serverless/website.xml
+  siteName: admin
+  bucketName: local-bucket
+  dynamodb:
+    stages:
+      - stage
+    start:
+      migrate: true
+
+functions:
+  api:
+    handler: src/api/router.handler
+    events:
+      - http:
+          path: /api/{any+}
+          method: any
+    provisionedConcurrency: 2
+    timeout: 20
+  host:
+    handler: src/host/serve.handler
+    events:
+      - http:
+          path: /{any+}
+          method: get
+    provisionedConcurrency: 2
+    timeout: 20
+    memorySize: 2048
+
+
+resources: # CloudFormation template syntax from here on.
+  Resources:
+    stitchAppTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: StitchApp
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    stitchAppVersionTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: StitchAppVersion
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    S3Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        AccessControl: PublicRead
+        BucketName: ${self:custom.bucketName}
+        WebsiteConfiguration:
+          IndexDocument: index.html
+          ErrorDocument: error.html
+    S3BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket:
+          Ref: S3Bucket
+        PolicyDocument:
+          Statement:
+            - Sid: PublicReadGetObject
+              Effect: Allow
+              Principal: "*"
+              Action:
+                - s3:GetObject
+              Resource: arn:aws:s3:::${self:custom.bucketName}/*
