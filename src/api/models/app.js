@@ -22,7 +22,7 @@ findCurrentVersion = async () => {
 
 }
 
-module.exports.publish = async (req) => {
+module.exports.upload = async (req) => {
   let data = req.body;
   const name = data.name;
   const version = data.version;
@@ -79,28 +79,6 @@ module.exports.publish = async (req) => {
   return item;
 }
 
-savePipeSync = (stream, destination) => {
-  return new Promise((resolve, reject) => {
-    var w = fs.createWriteStream(destination);
-    stream.pipe(w);
-
-    w.on('finish', () => {
-      resolve();
-    });
-  });
-}
-
-
-tarPipeSync = (stream, destination) => {
-  return new Promise((resolve, reject) => {
-    var extract = tar.extract(destination);
-    extract.on('finish', () => {
-      resolve();
-    })
-    stream.pipe(extract);
-  });
-}
-
 publishVersion = async (item) => {
   await DB.update('StitchApp',  {
     keys: { id: item.name },
@@ -112,47 +90,19 @@ publishVersion = async (item) => {
 
 
 
-module.exports.upload = async (req) => {
+module.exports.publish = async (req) => {
   const id = req.query.id;
   const name = req.query.name;
 
+  console.log("req.query", req.query)
+
   //get the document db item for this id.
-  const item = await DB.get('StitchAppVersion', { id, name });
+  const item = await DB.get('StitchAppVersion', { id });
   console.log("Item from db", item);
-
-
-  // dest directory, this is available on lambda and local.
-  const dir = '/tmp/app';
-  if (fs.existsSync(dir)){
-    fs.rmdirSync(dir,  { recursive: true });
-  }
-  fs.mkdirSync(dir);
-  const dest = path.join(dir, 'app.tar.gz');
-
-
-
-  // unzipped archive dest
-  const outputDest = path.join(dir, 'output')
-  if (fs.existsSync(outputDest)){
-    fs.rmdirSync(outputDest,  { recursive: true });
-  }
-  fs.mkdirSync(outputDest);
-
-  //save tar file
-  await savePipeSync(req, dest);
-
-  // untar archive.
-  await tarPipeSync(fs.createReadStream(dest), outputDest)
-
-  //upload archive to s3 bucket.
-  var options = null;
-  var invalidation = null
-  const files = await s3Helper.upload(outputDest, 'local-bucket/' +  id);
 
   //update item entry to 'published'
   await publishVersion(item.Item);
 
-
-  console.log("DONE publishing module");
+  return item.Item;
 
 }

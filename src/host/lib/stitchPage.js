@@ -107,12 +107,12 @@ module.exports = class StitchPage {
     apps.forEach((app) => {
       if(app) {
         app.assets.forEach((asset) => {
-          const assetPath = `${this.assetHostUrl}/${app.source}${asset}`;
+          const assetPath = `${this.assetHostUrl}/${app.source}${asset.file}`;
           let type = null;
-          if(asset.endsWith(".css")) {
+          if(asset.file.endsWith(".css")) {
             type = 'style'
           }
-          else if(asset.endsWith(".js")) {
+          else if(asset.file.endsWith(".js")) {
             type = 'script'
           }
 

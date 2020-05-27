@@ -19,9 +19,8 @@ express.post('/api/app/publish', async (req, res, next)  => {
 });
 
 express.post('/api/app/upload', async (req, res, next) => {
-  await app.upload(req);
-  req.on('end', next);
-  res.send("done");
+  const item = await app.upload(req);
+  res.send(item);
 });
 
 

@@ -8,7 +8,7 @@ module.exports = class StitchApp {
     this.version = version;
     this.source = source;
     this.type = config.type;
-    this.assets = JSON.parse(assets);
+    this.assets = assets;
   }
 
   build = async () => {
