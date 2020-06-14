@@ -2,15 +2,34 @@ service: admin-application
 
 provider:
   name: aws
-  runtime: nodejs10.x
+  runtime: nodejs12.x
   stage: ${env:STAGE}
   region: ${env:AWS_REGION_ID}
+  environment:
+    IS_OFFLINE: ${env:OFFLINE}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource:
+        - { "Fn::GetAtt": ["stitchAppTable", "Arn"] }
+        - { "Fn::GetAtt": ["stitchAppVersionTable", "Arn"] }
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+        - s3:PutObjectAcl
+      Resource: "arn:aws:s3:::${self:custom.bucketName}/*"
 
 plugins:
-  - serverless-offline
   - serverless-dotenv-plugin
   - serverless-dynamodb-local
   - serverless-s3-local
+  - serverless-offline
 
 custom:
   s3:
@@ -18,7 +37,7 @@ custom:
     directory: ../tmp-s3
     website: serverless/website.xml
   siteName: admin
-  bucketName: local-bucket
+  bucketName: ${env:BUCKET_NAME}
   dynamodb:
     stages:
       - stage
@@ -28,21 +47,20 @@ custom:
 functions:
   api:
     handler: src/api/router.handler
+    environment:
+      BUCKET_NAME: ${self:custom.bucketName}
     events:
       - http:
           path: /api/{any+}
           method: any
-    provisionedConcurrency: 2
-    timeout: 20
   host:
     handler: src/host/serve.handler
+    environment:
+      BUCKET_NAME: ${self:custom.bucketName}
     events:
       - http:
           path: /{any+}
           method: get
-    provisionedConcurrency: 2
-    timeout: 20
-    memorySize: 2048
 
 
 resources: # CloudFormation template syntax from here on.

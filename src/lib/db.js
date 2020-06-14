@@ -1,12 +1,19 @@
 var AWS = require('aws-sdk');
+const IS_OFFLINE = process.env.IS_OFFLINE;
 
-const dbClient = new AWS.DynamoDB.DocumentClient({
-  region: 'localhost',
-  endpoint: 'http://localhost:8000',
-  accessKeyId: 'DEFAULT_ACCESS_KEY',  // needed if you don't have aws credentials at all in env
-  secretAccessKey: 'DEFAULT_SECRET' // needed if you don't have aws credentials at all in env
-});
+console.log("IS_OFFLINE", IS_OFFLINE, process.env);
 
+let dbClient;
+if (IS_OFFLINE === 'true') {
+  dbClient = new AWS.DynamoDB.DocumentClient({
+    region: 'localhost',
+    endpoint: 'http://localhost:8000',
+    accessKeyId: 'DEFAULT_ACCESS_KEY',
+    secretAccessKey: 'DEFAULT_SECRET'
+  });
+} else {
+  dbClient = new AWS.DynamoDB.DocumentClient();
+}
 
 const get = async (table, keys) => {
   var params = {

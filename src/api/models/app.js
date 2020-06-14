@@ -1,19 +1,26 @@
 const { v4: uuidv4 } = require('uuid');
 const DB = require('../../lib/db');
 const AWS = require('aws-sdk');
-const fs = require('fs');
-const path = require('path');
-var tar = require('tar-fs');
-var s3Helper = require('./s3');
 
-var s3 = new AWS.S3({
-  "accessKeyId": "S3RVER",
-  "secretAccessKey": "S3RVER",
-  "region": "test",
-  "s3ForcePathStyle": true,
-  "endpoint": new AWS.Endpoint('http://localhost:8034'),
-  signatureVersion: 'v4',
-});
+let s3 = null;
+if(process.env.IS_OFFLINE === true) {
+  s3 = new AWS.S3({
+    "accessKeyId": "S3RVER",
+    "secretAccessKey": "S3RVER",
+    "region": "test",
+    "s3ForcePathStyle": true,
+    "endpoint": new AWS.Endpoint('http://localhost:8034'),
+    signatureVersion: 'v4',
+  });
+}
+else {
+  s3 = new AWS.S3({
+    "s3ForcePathStyle": true,
+    "region": process.env.region,
+    signatureVersion: 'v4',
+  });
+}
+
 
 var compareVersions = require('compare-versions');
 
@@ -25,7 +32,7 @@ findCurrentVersion = async () => {
 module.exports.upload = async (req) => {
   let data = req.body;
   const name = data.name;
-  const version = data.version;
+  const version = data.version.toString();
   const files = JSON.parse(data.assets);
   const config = JSON.parse(data.config);
 
@@ -37,11 +44,11 @@ module.exports.upload = async (req) => {
   console.log("currentItem", currentItem);
   if(currentItem.Item) {
     // validate that this version is bigger.
-    if( compareVersions(version, currentItem.Item.version) < 1) {
+    //if( compareVersions(version, currentItem.Item.version.toString()) < 1) {
       // todo: restore version check
       // throw Error(`The '${name}' is currently at  '${currentItem.Item.version} version ${version}'. You tried to publish version '${version}'. Please upgrade the package version.`);
-    }
-    console.log("version", currentItem.Item.version, version, compareVersions(version, currentItem.Item.version));
+    //}
+    //console.log("version", currentItem.Item.version, version, compareVersions(version, currentItem.Item.version));
   }
 
 
@@ -52,7 +59,7 @@ module.exports.upload = async (req) => {
   const assets = [];
   files.forEach((a) => {
     const presignedS3Url = s3.getSignedUrl('putObject', {
-      Bucket: 'local-bucket',
+      Bucket:  process.env.BUCKET_NAME,
       Key: id + a,
       Expires: 10,
     });
@@ -69,8 +76,8 @@ module.exports.upload = async (req) => {
     id: id,
     name: name,
     version: version,
-    config: config.stitch, // json string of config.
-    type: config.stitch.type || 'app',
+    config: config, // json string of config.
+    type: config.type || 'app',
     assets: assets,
     sent_at: Date.now()
   }
@@ -94,7 +101,7 @@ module.exports.publish = async (req) => {
   const id = req.query.id;
   const name = req.query.name;
 
-  console.log("req.query", req.query)
+  console.log("req.query", req.query);
 
   //get the document db item for this id.
   const item = await DB.get('StitchAppVersion', { id });

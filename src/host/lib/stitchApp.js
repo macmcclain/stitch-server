@@ -11,15 +11,6 @@ module.exports = class StitchApp {
     this.assets = assets;
   }
 
-  build = async () => {
-    /*
-    //getting the config.
-    const configResponse = await axios.get(this.url + "/config.yml");
-    const config = YAML.parse(configResponse.data);
-
-    this.compiled.routes = config.routes;
-     */
-  }
 
 
 

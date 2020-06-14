@@ -1,6 +1,6 @@
 var path = require('path');
 var fs = require('fs');
-const cheerio = require('cheerio');
+var cheerio = require('cheerio');
 
 module.exports = class StitchPage {
   constructor({ path, stitchAppManager, assetHostUrl }) {
