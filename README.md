@@ -4,7 +4,6 @@ Serve Stitch applications through aws lambdas.
 
 ## todo
 
-- Add remove app option endpoint
 - Restore version validation
 - Add setting a template endpoint
 - Add tests
@@ -12,6 +11,7 @@ Serve Stitch applications through aws lambdas.
 
 ```
 # install local dynamodb
+nvm use 12
 sls dynamodb install
 npm run dev
 ```

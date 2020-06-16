@@ -25,10 +25,6 @@ else {
 var compareVersions = require('compare-versions');
 
 
-findCurrentVersion = async () => {
-
-}
-
 module.exports.upload = async (req) => {
   let data = req.body;
   const name = data.name;
@@ -95,13 +91,20 @@ publishVersion = async (item) => {
   });
 }
 
+remove = async (item) => {
+  await DB.update('StitchApp',  {
+    keys: { id: item.id },
+    ExpressionAttributeNames: { '#status': 'status' },
+    UpdateExpression: 'set #status = :status',
+    ExpressionAttributeValues: {':status': 'deleted' }
+  });
+}
+
 
 
 module.exports.publish = async (req) => {
   const id = req.query.id;
   const name = req.query.name;
-
-  console.log("req.query", req.query);
 
   //get the document db item for this id.
   const item = await DB.get('StitchAppVersion', { id });
@@ -113,3 +116,30 @@ module.exports.publish = async (req) => {
   return item.Item;
 
 }
+
+
+module.exports.list = async (req) => {
+  const result = await DB.query('StitchApp', {});
+  return result.Items;
+}
+
+
+module.exports.remove = async (req) => {
+  let result = null;
+  const id = req.params.id;
+
+  //get the document db item for this id.
+  const item = await DB.get('StitchApp', { id });
+
+  // if there is an item, remove it.
+  if(item.Item) {
+    remove(item.Item);
+  } else {
+    throw new Error( `App '${id}' not found. Run 'stitch list' for a list of apps.` );
+  }
+
+
+}
+
+
+

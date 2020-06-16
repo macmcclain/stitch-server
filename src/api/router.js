@@ -24,6 +24,23 @@ express.post('/api/app/upload', async (req, res, next) => {
 });
 
 
+express.post('/api/app/list', async (req, res, next) => {
+  const items = await app.list();
+  res.send(items);
+});
+
+express.post('/api/app/:id/remove', async (req, res, next) => {
+  try {
+    const item = await app.remove(req);
+    res.send(item);
+  }
+  catch (err) {
+    next(err.message );
+  }
+
+});
+
+
 // Finally, your custom error handler
 express.use(function customErrorHandler(err, req, res, next) {
   res.status(500).json({ message: err.message });

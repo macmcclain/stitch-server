@@ -1,8 +1,6 @@
 var AWS = require('aws-sdk');
 const IS_OFFLINE = process.env.IS_OFFLINE;
 
-console.log("IS_OFFLINE", IS_OFFLINE, process.env);
-
 let dbClient;
 if (IS_OFFLINE === 'true') {
   dbClient = new AWS.DynamoDB.DocumentClient({
