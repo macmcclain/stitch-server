@@ -57,7 +57,7 @@ module.exports.upload = async (req) => {
     const presignedS3Url = s3.getSignedUrl('putObject', {
       Bucket:  process.env.BUCKET_NAME,
       Key: id + a,
-      Expires: 10,
+      Expires: 100,
     });
 
     assets.push({
