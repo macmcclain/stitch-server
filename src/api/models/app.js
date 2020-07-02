@@ -3,7 +3,7 @@ const DB = require('../../lib/db');
 const AWS = require('aws-sdk');
 
 let s3 = null;
-if(process.env.IS_OFFLINE === true) {
+if(process.env.IS_OFFLINE === "true") {
   s3 = new AWS.S3({
     "accessKeyId": "S3RVER",
     "secretAccessKey": "S3RVER",

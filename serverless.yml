@@ -5,6 +5,8 @@ provider:
   runtime: nodejs12.x
   stage: ${env:STAGE}
   region: ${env:AWS_REGION_ID}
+  apiKeys:
+    - access_key
   environment:
     IS_OFFLINE: ${env:OFFLINE}
   iamRoleStatements:
@@ -53,6 +55,7 @@ functions:
       - http:
           path: /api/{any+}
           method: any
+          private: true
   host:
     handler: src/host/serve.handler
     environment:

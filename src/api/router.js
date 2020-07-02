@@ -7,6 +7,16 @@ var bodyParser = require('body-parser')
 express.use(bodyParser.json());
 
 
+express.post('/api/ping', async (req, res, next)  => {
+  try {
+    res.send(true);
+  }
+  catch (err) {
+    next(err);
+  }
+
+});
+
 express.post('/api/app/publish', async (req, res, next)  => {
   try {
     const item = await app.publish(req);
